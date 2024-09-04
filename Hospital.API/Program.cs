@@ -20,8 +20,10 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    //Ms SQL
-
+    builder.Services.AddDbContext<ApiMainContext>(opt =>
+    {
+        opt.UseSqlServer("Data Source=host.docker.internal,1433;Initial Catalog=MyDB;User ID=MyUser;Password=MyPassword");
+    });
 }
 
 var app = builder.Build();
