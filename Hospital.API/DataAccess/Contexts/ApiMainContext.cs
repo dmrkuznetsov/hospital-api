@@ -9,7 +9,7 @@ namespace Hospital.API.DataAccess.Contexts
         public DbSet<MedicalSpecialty> MedicalSpecialities { get; set; }
         public DbSet<DoctorsOffice> DoctorsOffices { get; set; }
         public DbSet<Patient> Patients { get; set; }
-        public DbSet<Doсtor> Doctors { get; set; }
+        public DbSet<Doctor> Doctors { get; set; }
         public ApiMainContext(DbContextOptions<ApiMainContext> options) : base(options)
         {
 
