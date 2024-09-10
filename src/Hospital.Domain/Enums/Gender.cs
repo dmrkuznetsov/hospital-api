@@ -1,9 +1,8 @@
-﻿namespace Hospital.API.Models.Enums
+﻿namespace Hospital.API.Models.Enums;
+
+public enum Gender
 {
-    public enum Gender
-    {
-        Male,
-        Female
-        //enough for now
-    }
+    Male,
+    Female
+    //enough for now
 }

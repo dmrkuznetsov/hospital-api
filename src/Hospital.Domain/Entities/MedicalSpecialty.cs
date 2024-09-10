@@ -1,7 +1,8 @@
-﻿namespace Hospital.API.Models.Entities
+﻿using Hospital.Domain.Entities.Abstract;
+
+namespace Hospital.API.Models.Entities;
+
+public class MedicalSpecialty : BaseEntity
 {
-    public class MedicalSpecialty : BaseEntity
-    {
-        public string Name { get; set; }
-    }
+    public string Name { get; set; }
 }

@@ -1,7 +1,8 @@
-﻿namespace Hospital.API.Models.Entities
+﻿using Hospital.Domain.Entities.Abstract;
+
+namespace Hospital.API.Models.Entities;
+
+public class DoctorsOffice : BaseEntity
 {
-    public class DoctorsOffice : BaseEntity
-    {
-        public int Number { get; set; }
-    }
+    public int Number { get; set; }
 }
