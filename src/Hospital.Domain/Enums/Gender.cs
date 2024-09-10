@@ -1,4 +1,4 @@
-﻿namespace Hospital.API.Models.Enums;
+﻿namespace Hospital.Domain.Enums;
 
 public enum Gender
 {

@@ -1,7 +1,7 @@
-﻿using Hospital.API.Models.Enums;
-using Hospital.Domain.Entities.Abstract;
+﻿using Hospital.Domain.Entities.Abstract;
+using Hospital.Domain.Enums;
 
-namespace Hospital.API.Models.Entities;
+namespace Hospital.Domain.Entities;
 
 public class Patient : BaseEntity
 {

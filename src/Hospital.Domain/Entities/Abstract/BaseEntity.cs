@@ -1,4 +1,4 @@
-﻿namespace Hospital.API.Models.Entities
+﻿namespace Hospital.Domain.Entities.Abstract
 {
     public abstract class BaseEntity
     {
