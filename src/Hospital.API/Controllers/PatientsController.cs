@@ -1,10 +1,10 @@
-﻿using Hospital.API.DataAccess.Contexts;
-using Microsoft.AspNetCore.Mvc;
-using Hospital.API.Models.Entities;
-using Hospital.API.DataAccess.DTO;
-using Microsoft.EntityFrameworkCore;
-using Hospital.API.DataAccess.Enums;
-using Hospital.API.Models.Enums;
+﻿using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Hospital.API.DTOs.Patient;
+using Hospital.Application.Patients.Commands;
+using Hospital.Application.Patients.Queries;
+using Hospital.Application.Patients.Enums;
+using Hospital.Application.Common.Enums;
 
 namespace Hospital.API.Controllers
 {
@@ -12,140 +12,87 @@ namespace Hospital.API.Controllers
     [Route("[controller]")]
     public class PatientsController : ControllerBase
     {
-        private ApiMainContext _context;
-        public PatientsController(ApiMainContext context)
+        private IMediator _mediator;
+        public PatientsController(IMediator mediator)
         {
-            _context = context;
-            _context.Database.EnsureCreated();
+            _mediator = mediator;
         }
 
         [HttpPost(Name = "PostPatient")]
-        public async Task<IActionResult> PostPatient(PatientDTO patientDto)
+        public async Task<ActionResult<PatientInfoDTO>> PostPatient(PatientCreationDTO patientDto)
         {
-            var medicalCenter = await _context.MedicalCenters.Where(x => x.Number == patientDto.MedicalCenterNumber).FirstOrDefaultAsync();
-            if (medicalCenter is null)
-            {
-                medicalCenter = new MedicalCenter() { Number = patientDto.MedicalCenterNumber };
-                _context.MedicalCenters.Add(medicalCenter);
-            }
-            var patient = new Patient()
-            {
-                Surname = patientDto.Surname,
-                Name = patientDto.Name,
-                Patronymic = patientDto.Patronymic,
-                Address = patientDto.Address,
-                BirthDate = patientDto.BirthDate,
-                Gender = patientDto.Gender,
-                MedicalCenter = medicalCenter
-            };
-            _context.Patients.Add(patient);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
+            var patient = await _mediator.Send(new CreatePatientCommand(patientDto.Surname, patientDto.Name, patientDto.Patronymic, patientDto.Address, patientDto.BirthDate, patientDto.Gender, patientDto.MedicalCenterNumber));
+            if (patient is null) return Conflict();
+            return new PatientInfoDTO { Id = patient.Id, Surname = patient.Surname, Name = patient.Name, Patronymic = patient.Patronymic, Address = patient.Address, BirthDate = patient.BirthDate, Gender = patient.Gender, MedicalCenterNumber = patient.MedicalCenter.Number };
         }
 
         [HttpGet(template: "{id}", Name = "GetPatientById")]
-        public async Task<ActionResult<PatientEditDTO>> GetPatient(Guid id)
+        public async Task<ActionResult<PatientWithDependenciesIdDTO>> GetPatient(Guid id)
         {
-            var patient = await _context.Patients.Include(x=>x.MedicalCenter).FirstOrDefaultAsync(x=>x.Id == id);
-            if (patient is null)
+            var patient = await _mediator.Send(new GetPatientByIdQuery(id));
+            if (patient is null || patient.Id != id) return NotFound();
+            return new PatientWithDependenciesIdDTO
             {
-                return NotFound();
-            }
-            return new PatientEditDTO(patient.Surname, patient.Name, patient.Patronymic, patient.Address, patient.BirthDate, patient.Gender, patient.MedicalCenter.Id);
+                Id = patient.Id,
+                Surname = patient.Surname,
+                Name = patient.Name,
+                Patronymic = patient.Patronymic,
+                Address = patient.Address,
+                BirthDate = patient.BirthDate,
+                Gender = patient.Gender,
+                MedicalCenterId = patient.MedicalCenter.Id
+            };
         }
 
         [HttpGet(Name = "GetAllPatients")]
-        public async Task<IEnumerable<PatientDTO>> GetPatients()
+        public async Task<ActionResult<IEnumerable<PatientInfoDTO>>> GetPatients()
         {
-            var patients = await _context.Patients.Include(x=>x.MedicalCenter).ToArrayAsync();
-            return patients.Select(x => new PatientDTO(x.Surname, x.Name, x.Patronymic, x.Address, x.BirthDate, x.Gender, x.MedicalCenter.Number));
+            var patients = await _mediator.Send(new GetAllPatientsQuery());
+            if (patients is null || !patients.Any()) return NotFound();
+            return patients.Select(x => new PatientInfoDTO
+            {
+                Id = x.Id,
+                Surname = x.Surname,
+                Name = x.Name,
+                Patronymic = x.Patronymic,
+                Address = x.Address,
+                BirthDate = x.BirthDate,
+                Gender = x.Gender,
+                MedicalCenterNumber = x.MedicalCenter.Number
+            }).ToArray();
         }
 
         [HttpGet(template: "sorted", Name = "GetAllPatientsSorted")]
-        public async Task<IEnumerable<PatientDTO>> GetDoctors([FromQuery] SortingField field, [FromQuery] OrderDirection direction, [FromQuery] int itemsPerPage, [FromQuery] int page)
+        public async Task<ActionResult<IEnumerable<PatientInfoDTO>>> GetDoctors([FromQuery] PatientSortingField field, [FromQuery] OrderDirection direction, [FromQuery] int itemsPerPage, [FromQuery] int page)
         {
-            var patientsQuery = _context.Patients
-                   .Include(x => x.MedicalCenter);
-            bool ascending = direction == OrderDirection.Ascending;
-            Patient[] patients = Array.Empty<Patient>();
-            switch (field)
+            var patients = await _mediator.Send(new GetPatientsSortedPagedQuery(field, direction, itemsPerPage, page));
+            if (patients is null || !patients.Any()) return NotFound();
+            return patients.Select(x => new PatientInfoDTO
             {
-                case SortingField.Surname:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.Surname).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.Surname).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.Name:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.Name).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.Name).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.Patronimic:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.Patronymic).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.Patronymic).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.Address:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.Address).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.Address).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.BirthDate:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.BirthDate).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.BirthDate).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.Gender:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.Gender).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.Gender).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                case SortingField.MedicalCenter:
-                    patients = ascending ?
-                        await patientsQuery.OrderBy(x => x.MedicalCenter.Number).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync() :
-                        await patientsQuery.OrderByDescending(x => x.MedicalCenter.Number).Skip(itemsPerPage * page).Take(itemsPerPage).ToArrayAsync();
-                    break;
-                default:
-                    return Array.Empty<PatientDTO>();
-            }
-            return patients.Select(x => new PatientDTO(x.Surname, x.Name, x.Patronymic, x.Address, x.BirthDate, x.Gender, x.MedicalCenter.Number));
+                Id = x.Id,
+                Surname = x.Surname,
+                Name = x.Name,
+                Patronymic = x.Patronymic,
+                Address = x.Address,
+                BirthDate = x.BirthDate,
+                Gender = x.Gender,
+                MedicalCenterNumber = x.MedicalCenter.Number
+            }).ToArray();
         }
 
-        [HttpPut(template: "{id}", Name = "PutPatientById")]
-        public async Task<IActionResult> PutPatient(Guid id, PatientDTO patientDto)
+        [HttpPut(Name = "PutPatientById")]
+        public async Task<IActionResult> PutPatient(PatientInfoDTO patientDto)
         {
-            var patient = await _context.Patients.Include(x => x.MedicalCenter).FirstOrDefaultAsync(x => x.Id == id);
-            if (patient is null)
-            {
-                return NotFound();
-            }
-            patient.Surname = patientDto.Surname;
-            patient.Name = patientDto.Name; 
-            patient.Patronymic = patientDto.Patronymic;
-            patient.Address = patientDto.Address;
-            patient.BirthDate = patientDto.BirthDate;
-            patient.Gender = patientDto.Gender;
-            var medicalCenter = await _context.MedicalCenters.Where(x => x.Number == patientDto.MedicalCenterNumber).FirstOrDefaultAsync();
-            if (medicalCenter is null)
-            {
-                medicalCenter = new MedicalCenter() { Number = patientDto.MedicalCenterNumber };
-                _context.MedicalCenters.Add(medicalCenter);
-            }
-            patient.MedicalCenter = medicalCenter;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var patient = await _mediator.Send(new UpdatePatientCommand(patientDto.Id, patientDto.Surname, patientDto.Name, patientDto.Patronymic, patientDto.Address, patientDto.BirthDate, patientDto.Gender, patientDto.MedicalCenterNumber));
+            if (patient is null) return NotFound();
+            return Ok();
         }
 
         [HttpDelete(template: "{id}", Name = "DeletePatientById")]
         public async Task<IActionResult> DeletePatient(Guid id)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
+            var res = await _mediator.Send(new DeletePatientCommand(id));
+            if(!res) return NotFound();
             return NoContent();
         }
     }
