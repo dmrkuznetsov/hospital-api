@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.API", "src\Hospital.API\Hospital.API.csproj", "{A677FAA8-8AF5-40DB-9B40-C1D5243B191C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.API", "src\Hospital.Presentation\Hospital.API\Hospital.API.csproj", "{A677FAA8-8AF5-40DB-9B40-C1D5243B191C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.Domain", "src\Hospital.Domain\Hospital.Domain.csproj", "{09D2315F-2476-4473-B896-43424883BDB4}"
 EndProject
