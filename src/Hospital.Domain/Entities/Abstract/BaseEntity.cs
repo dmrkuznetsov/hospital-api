@@ -1,7 +1,6 @@
-﻿namespace Hospital.Domain.Entities.Abstract
+﻿namespace Hospital.Domain.Entities.Abstract;
+
+public abstract class BaseEntity
 {
-    public abstract class BaseEntity
-    {
-        public Guid Id { get; set; }
-    }
+    public Guid Id { get; set; }
 }
