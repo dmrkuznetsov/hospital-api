@@ -1,12 +1,12 @@
-﻿using Hospital.API.DTOs.Doctor;
-using Hospital.Application.Common.Enums;
+﻿using Hospital.Application.Common.Enums;
 using Hospital.Application.Doctors.Commands;
 using Hospital.Application.Doctors.Enums;
 using Hospital.Application.Doctors.Queries;
+using Hospital.Web.DTOs.Doctor;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hospital.API.Controllers
+namespace Hospital.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -45,7 +45,7 @@ namespace Hospital.API.Controllers
         {
             var doctors = await _mediator.Send(new GetAllDoctorsQuery());
             if (doctors is null || !doctors.Any()) return NotFound();
-            return doctors.Select(x=>new DoctorInfoDTO
+            return doctors.Select(x => new DoctorInfoDTO
             {
                 Id = x.Id,
                 FullName = x.FullName,
@@ -60,7 +60,7 @@ namespace Hospital.API.Controllers
         {
             var doctors = await _mediator.Send(new GetDoctorsSortedPagedQuery(field, direction, itemsPerPage, page));
             if (doctors is null || !doctors.Any()) return NotFound();
-            return doctors.Select(x=>new DoctorInfoDTO
+            return doctors.Select(x => new DoctorInfoDTO
             {
                 Id = x.Id,
                 FullName = x.FullName,
@@ -82,7 +82,7 @@ namespace Hospital.API.Controllers
         public async Task<IActionResult> DeleteDoctor(Guid id)
         {
             var res = await _mediator.Send(new DeleteDoctorCommand(id));
-            if(!res) return NotFound();
+            if (!res) return NotFound();
             return NoContent();
         }
     }

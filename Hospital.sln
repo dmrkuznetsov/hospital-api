@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.API", "src\Hospital.Presentation\Hospital.API\Hospital.API.csproj", "{A677FAA8-8AF5-40DB-9B40-C1D5243B191C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.Web", "src\Hospital.Presentation\Hospital.API\Hospital.Web.csproj", "{A677FAA8-8AF5-40DB-9B40-C1D5243B191C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.Domain", "src\Hospital.Domain\Hospital.Domain.csproj", "{09D2315F-2476-4473-B896-43424883BDB4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.Infrastructure", "src\Hospital.Infrastructure\Hospital.Infrastructure.csproj", "{3932D467-3E50-4B78-AA0B-57C477489171}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hospital.Application", "src\Hospital.Application\Hospital.Application.csproj", "{34B94326-8066-4B80-91E8-DA071531FE82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hospital.Application", "src\Hospital.Application\Hospital.Application.csproj", "{34B94326-8066-4B80-91E8-DA071531FE82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

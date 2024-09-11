@@ -1,6 +1,6 @@
 ﻿using Hospital.Domain.Enums;
 
-namespace Hospital.API.DTOs.Patient;
+namespace Hospital.Web.DTOs.Patient;
 
 public class PatientWithDependenciesIdDTO
 {

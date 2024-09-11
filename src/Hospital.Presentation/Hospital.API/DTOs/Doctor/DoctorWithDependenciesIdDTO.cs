@@ -1,4 +1,4 @@
-﻿namespace Hospital.API.DTOs.Doctor;
+﻿namespace Hospital.Web.DTOs.Doctor;
 
 public class DoctorWithDependenciesIdDTO
 {
