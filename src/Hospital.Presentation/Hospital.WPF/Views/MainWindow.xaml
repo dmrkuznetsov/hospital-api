@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Hospital.WPF"
         xmlns:vms="clr-namespace:Hospital.WPF.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="550" Width="800">
     <Window.DataContext>
         <vms:MainVM/>
     </Window.DataContext>
@@ -17,27 +17,46 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <DataGrid Grid.Row="0" ItemsSource="{Binding Patients}" CanUserAddRows="False">
+            <Label Content="Пациенты: "/>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Patients}" CanUserAddRows="False" AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Имя" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Фамилия" Binding="{Binding Surname, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Отчество" Binding="{Binding Patronymic, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Номер участка" Binding="{Binding MedicalCenterNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Адрес" Binding="{Binding Address, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Пол" Binding="{Binding Gender, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Дата рождения" Binding="{Binding BirthDate, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                </DataGrid.Columns>
             </DataGrid>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
                 <Button Command="{Binding AddPatientCommand}" Content="Добавить"  Padding="10,0,10,0"/>
-                <Button Command="{Binding GetPatientsCommand}" Height="25" Content="Загрузить таблицу пациентов" Padding="10,0,10,0"  Margin="20,0,0,0"/>
+                <Button Command="{Binding GetPatientsCommand}" Height="25" Content="Обновить" Padding="10,0,10,0"  Margin="20,0,0,0"/>
                 <Button Command="{Binding SaveChangedPatientsCommand}" Content="Сохранить изменения" Margin="20,0,0,0" Padding="10,0,10,0"/>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="1" Margin="0,10,0,0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <DataGrid Grid.Row="0" ItemsSource="{Binding Doctors}" CanUserAddRows="False">
+            <Label Content="Врачи:"/>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Doctors}" CanUserAddRows="False" AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ФИО" Binding="{Binding FullName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Номер кабинета" Binding="{Binding DoctorsOfficeNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Специальность" Binding="{Binding MedicalSpecialtyName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    <DataGridTextColumn Header="Номер участка" Binding="{Binding MedicalCenterNumber, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                </DataGrid.Columns>
             </DataGrid>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
                 <Button Command="{Binding AddDoctorCommand}" Content="Добавить" Padding="10,0,10,0"/>
-                <Button Command="{Binding GetDoctortsCommand}" Height="25" Content="Загрузить таблицу врачей" Padding="10,0,10,0" Margin="20,0,0,0"/>
+                <Button Command="{Binding GetDoctortsCommand}" Height="25" Content="Обновить" Padding="10,0,10,0" Margin="20,0,0,0"/>
                 <Button Command="{Binding SaveChangedDoctorsCommand}" Content="Сохранить изменения" Margin="20,0,0,0" Padding="10,0,10,0"/>
             </StackPanel>
         </Grid>
