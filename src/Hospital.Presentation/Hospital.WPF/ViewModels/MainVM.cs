@@ -16,6 +16,13 @@ public class MainVM : ObservableObject
     public ObservableCollection<DoctorVM> Doctors { get; } = new ObservableCollection<DoctorVM>();
     public ObservableCollection<PatientVM> Patients { get; } = new ObservableCollection<PatientVM>();
     private bool _activeAction = false;
+    private bool _patientsAnyChanges;
+    public bool PatientsAnyChanges 
+    {
+        get { return _patientsAnyChanges; }
+        set { _patientsAnyChanges = value; RaisePropertyChanged(); }
+    }
+
     public bool ActiveAction
     {
         get => _activeAction;
@@ -42,11 +49,22 @@ public class MainVM : ObservableObject
         try
         {
             ActiveAction = true;
-            var patients = await DataAccessHelper.GetCall<IEnumerable<PatientInfoDTO>>($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}");
             Patients.Clear();
+            PatientsAnyChanges = true;
+            var patients = await DataAccessHelper.GetCall<PatientInfoDTO[]>($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}");
+            if(patients is null)
+            {
+                MessageBox.Show("No patients received", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             foreach (var p in patients)
             {
-                Patients.Add(new PatientVM(p));
+                var pvm = new PatientVM(p);
+                Patients.Add(pvm);
+                pvm.PropertyChanged += (sender, args) =>
+                {
+                    PatientsAnyChanges = true;
+                };
             }
         }
         catch(Exception ex) 
@@ -69,8 +87,13 @@ public class MainVM : ObservableObject
         try
         {
             ActiveAction = true;
-            var doctors = await DataAccessHelper.GetCall<IEnumerable<DoctorInfoDTO>>($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}");
             Doctors.Clear();
+            var doctors = await DataAccessHelper.GetCall<DoctorInfoDTO[]>($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}");
+            if (doctors is null)
+            {
+                MessageBox.Show("No doctors received", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             foreach (var d in doctors)
             {
                 Doctors.Add(new DoctorVM(d));

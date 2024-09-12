@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http;
-using System.Net.Http.Json;
+using Newtonsoft.Json;
 
 namespace Hospital.WPF.DataAccess;
 
@@ -17,7 +17,15 @@ public static class DataAccessHelper
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var response = await client.GetAsync(uri);
-                return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+                var content = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    return JsonConvert.DeserializeObject<T>(content);
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
         catch (Exception ex)
