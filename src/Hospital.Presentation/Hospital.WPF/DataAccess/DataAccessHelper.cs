@@ -1,6 +1,8 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http;
 using Newtonsoft.Json;
+using System.Net.Http.Json;
+using System.Net;
 
 namespace Hospital.WPF.DataAccess;
 
@@ -26,6 +28,24 @@ public static class DataAccessHelper
                 {
                     return null;
                 }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+    public static async Task PutCall<T>(string uri, T data) where T : class
+    {
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(uri);
+                client.Timeout = TimeSpan.FromSeconds(900);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var response = await client.PutAsJsonAsync(uri, data);
             }
         }
         catch (Exception ex)

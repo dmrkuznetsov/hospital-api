@@ -71,6 +71,7 @@ public class PatientVM : ObservableObject
             RaisePropertyChanged();
         }
     }
+    public PatientInfoDTO Data => _patientInfo;
 
     public PatientVM(PatientInfoDTO patientInfo)
     {

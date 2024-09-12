@@ -16,11 +16,13 @@ public class MainVM : ObservableObject
     public ObservableCollection<DoctorVM> Doctors { get; } = new ObservableCollection<DoctorVM>();
     public ObservableCollection<PatientVM> Patients { get; } = new ObservableCollection<PatientVM>();
     private bool _activeAction = false;
-    private bool _patientsAnyChanges;
     public bool PatientsAnyChanges 
     {
-        get { return _patientsAnyChanges; }
-        set { _patientsAnyChanges = value; RaisePropertyChanged(); }
+        get => _modifiedPatients.Any();
+    }
+    public bool DoctorsAnyChanges 
+    {
+        get => _modifiedDoctors.Any();
     }
 
     public bool ActiveAction
@@ -37,6 +39,8 @@ public class MainVM : ObservableObject
     {
         get => !_activeAction;
     }
+    private List<PatientVM> _modifiedPatients = new List<PatientVM>();
+    private List<DoctorVM> _modifiedDoctors= new List<DoctorVM>();
     #endregion
 
     #region Команды
@@ -50,7 +54,7 @@ public class MainVM : ObservableObject
         {
             ActiveAction = true;
             Patients.Clear();
-            PatientsAnyChanges = true;
+            _modifiedPatients.Clear();
             var patients = await DataAccessHelper.GetCall<PatientInfoDTO[]>($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}");
             if(patients is null)
             {
@@ -63,7 +67,9 @@ public class MainVM : ObservableObject
                 Patients.Add(pvm);
                 pvm.PropertyChanged += (sender, args) =>
                 {
-                    PatientsAnyChanges = true;
+                    var patient = sender as PatientVM;
+                    _modifiedPatients.Add(patient);
+                    RaisePropertyChanged(nameof(PatientsAnyChanges));
                 };
             }
         }
@@ -77,6 +83,33 @@ public class MainVM : ObservableObject
         }
     }
     public bool CanGetPatients(object _) => !ActiveAction;
+    #endregion
+
+    #region Сохранить изменения в таблице пациентов 
+    public ICommand SaveChangedPatientsCommand { get; }
+
+    public async void OnSaveChangedPatients(object _)
+    {
+        if (!_modifiedPatients.Any()) return;
+        try
+        {
+            ActiveAction = true;
+            foreach (var p in _modifiedPatients.ToArray())
+            {
+                await DataAccessHelper.PutCall($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}", p.Data);
+                _modifiedPatients.Remove(p);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ActiveAction = false;
+        }
+    }
+    public bool CanSaveChangedPatients(object _) => PatientsAnyChanges && !ActiveAction; 
     #endregion
 
     #region Получить всех врачей
@@ -96,7 +129,14 @@ public class MainVM : ObservableObject
             }
             foreach (var d in doctors)
             {
-                Doctors.Add(new DoctorVM(d));
+                var dvm = new DoctorVM(d);
+                Doctors.Add(dvm);
+                dvm.PropertyChanged += (sender, args) =>
+                {
+                    var doctor = sender as DoctorVM;
+                    _modifiedDoctors.Add(doctor);
+                    RaisePropertyChanged(nameof(DoctorsAnyChanges));
+                };
             }
         }
         catch(Exception ex) 
@@ -111,6 +151,32 @@ public class MainVM : ObservableObject
     public bool CanGetDoctors(object _) => !ActiveAction;
     #endregion
 
+    #region Сохранить изменения в таблице врачей
+    public ICommand SaveChangedDoctorsCommand { get; }
+    public async void OnSaveChangedDoctors(object _)
+    {
+        if (!_modifiedDoctors.Any()) return;
+        try
+        {
+            ActiveAction = true;
+            foreach (var d in _modifiedDoctors.ToArray())
+            {
+                await DataAccessHelper.PutCall($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}", d.Data);
+                _modifiedDoctors.Remove(d);
+            }
+        }
+        catch(Exception ex) 
+        {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ActiveAction = false;
+        }
+
+    }
+    public bool CanSaveChangedDoctors(object _) => DoctorsAnyChanges && !ActiveAction;
+    #endregion
 
     #endregion
 
@@ -119,6 +185,8 @@ public class MainVM : ObservableObject
     {
         GetPatientsCommand = new RelayCommand(OnGetPatients, CanGetPatients);
         GetDoctortsCommand = new RelayCommand(OnGetDoctors, CanGetDoctors);
+        SaveChangedPatientsCommand = new RelayCommand(OnSaveChangedPatients, CanSaveChangedPatients);
+        SaveChangedDoctorsCommand = new RelayCommand(OnSaveChangedDoctors, CanSaveChangedDoctors);
     }
     #endregion
 }
