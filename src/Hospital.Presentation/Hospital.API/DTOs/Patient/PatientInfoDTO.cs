@@ -1,8 +1,8 @@
 ﻿using Hospital.Domain.Enums;
 
-namespace Hospital.API.DTOs.Patient;
+namespace Hospital.Web.DTOs.Patient;
 
-public class PatientWithDependenciesIdDTO
+public class PatientInfoDTO
 {
     public Guid Id { get; set; }
     public string Surname { get; set; }
@@ -11,5 +11,5 @@ public class PatientWithDependenciesIdDTO
     public string Address { get; set; }
     public DateOnly BirthDate { get; set; }
     public Gender Gender { get; set; }
-    public Guid MedicalCenterId { get; set; }
+    public int MedicalCenterNumber { get; set; }
 }

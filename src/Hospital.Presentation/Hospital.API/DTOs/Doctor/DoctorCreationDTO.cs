@@ -1,8 +1,7 @@
-﻿namespace Hospital.API.DTOs.Doctor;
+﻿namespace Hospital.Web.DTOs.Doctor;
 
-public class DoctorInfoDTO
+public class DoctorCreationDTO
 {
-    public Guid Id { get; set; }
     public string FullName { get; set; }
     public int DoctorsOfficeNumber { get; set; }
     public string MedicalSpecialtyName { get; set; }

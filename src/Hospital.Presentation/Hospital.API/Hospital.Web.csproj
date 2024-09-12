@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hospital.Application\Hospital.Application.csproj" />
-    <ProjectReference Include="..\Hospital.Domain\Hospital.Domain.csproj" />
-    <ProjectReference Include="..\Hospital.Infrastructure\Hospital.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Hospital.Application\Hospital.Application.csproj" />
+    <ProjectReference Include="..\..\Hospital.Domain\Hospital.Domain.csproj" />
+    <ProjectReference Include="..\..\Hospital.Infrastructure\Hospital.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

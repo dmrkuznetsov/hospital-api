@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using Hospital.API.DTOs.Patient;
 using Hospital.Application.Patients.Commands;
 using Hospital.Application.Patients.Queries;
 using Hospital.Application.Patients.Enums;
 using Hospital.Application.Common.Enums;
+using Hospital.Web.DTOs.Patient;
 
-namespace Hospital.API.Controllers
+namespace Hospital.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -92,7 +92,7 @@ namespace Hospital.API.Controllers
         public async Task<IActionResult> DeletePatient(Guid id)
         {
             var res = await _mediator.Send(new DeletePatientCommand(id));
-            if(!res) return NotFound();
+            if (!res) return NotFound();
             return NoContent();
         }
     }
