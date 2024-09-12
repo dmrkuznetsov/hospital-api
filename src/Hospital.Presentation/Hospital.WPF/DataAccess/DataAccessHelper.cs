@@ -53,4 +53,31 @@ public static class DataAccessHelper
             throw;
         }
     }
+    public static async Task<TResult> PostCall<TRequest, TResult>(string uri, TRequest data) where TResult : class
+    {
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(uri);
+                client.Timeout = TimeSpan.FromSeconds(900);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var response = await client.PostAsJsonAsync(uri, data);
+                var content = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    return JsonConvert.DeserializeObject<TResult>(content);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
 }

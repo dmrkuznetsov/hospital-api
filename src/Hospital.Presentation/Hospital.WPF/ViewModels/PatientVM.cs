@@ -77,4 +77,22 @@ public class PatientVM : ObservableObject
     {
         _patientInfo = patientInfo;
     }
+
+    public PatientVM()
+    {
+        _patientInfo = new PatientInfoDTO 
+        {
+            Surname = "Иванов",
+            Name = "Иван",
+            Patronymic = "Иванович",
+            Address = "г.Неизвестный, ул.Гдетотам 23",
+            BirthDate = new DateOnly(1994, 12, 20),
+            Gender = Gender.Male,
+            MedicalCenterNumber = 123,
+        };
+    }
+    public void UpdateData(PatientInfoDTO pInfo)
+    {
+        _patientInfo = pInfo;
+    }
 }

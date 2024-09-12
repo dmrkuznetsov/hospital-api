@@ -49,4 +49,18 @@ public class DoctorVM : ObservableObject
     {
         _doctorInfo = doctorInfo;
     }
+    public DoctorVM()
+    {
+        _doctorInfo = new DoctorInfoDTO
+        {
+            FullName = "Иванов Иван Иванович",
+            DoctorsOfficeNumber = 203,
+            MedicalCenterNumber = 1024,
+            MedicalSpecialtyName = "офтальмолог"
+        };
+    }
+    public void UpdateData(DoctorInfoDTO dInfo)
+    {
+        _doctorInfo = dInfo;
+    }
 }
