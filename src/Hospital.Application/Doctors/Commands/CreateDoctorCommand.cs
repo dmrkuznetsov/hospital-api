@@ -32,22 +32,18 @@ public class CreateDoctorCommand : IRequest<Doctor>
         }
         public async Task<Doctor> Handle(CreateDoctorCommand request, CancellationToken cancellationToken)
         {
-            var doctor = await DbContext.Doctors.FirstOrDefaultAsync(x => x.FullName.Equals(request.FullName, StringComparison.OrdinalIgnoreCase), cancellationToken);
-            if (doctor is null)
+            var doctorsOffice = await _mediator.Send(new CreateDoctorsOfficeCommand(request.DoctorsOfficeNumber, false), cancellationToken);
+            var medicalCenter = await _mediator.Send(new CreateMedicalCenterCommand(request.MedicalCenterNumber, false), cancellationToken);
+            var medicalSpecialty = await _mediator.Send(new CreateMedicalSpecialtyCommand(request.MedicalSpecialtyName, false), cancellationToken);
+            var doctor = new Doctor
             {
-                var doctorsOffice = await _mediator.Send(new CreateDoctorsOfficeCommand(request.DoctorsOfficeNumber, false), cancellationToken);
-                var medicalCenter = await _mediator.Send(new CreateMedicalCenterCommand(request.MedicalCenterNumber, false), cancellationToken);
-                var medicalSpecialty = await _mediator.Send(new CreateMedicalSpecialtyCommand(request.MedicalSpecialtyName, false), cancellationToken);
-                doctor = new Doctor
-                {
-                    FullName = request.FullName,
-                    DoctorsOffice = doctorsOffice,
-                    MedicalCenter = medicalCenter,
-                    MedicalSpecialty = medicalSpecialty
-                };
-                await DbContext.Doctors.AddAsync(doctor, cancellationToken);
-                await DbContext.SaveDbChangesAsync(cancellationToken);
-            }
+                FullName = request.FullName,
+                DoctorsOffice = doctorsOffice,
+                MedicalCenter = medicalCenter,
+                MedicalSpecialty = medicalSpecialty
+            };
+            await DbContext.Doctors.AddAsync(doctor, cancellationToken);
+            await DbContext.SaveDbChangesAsync(cancellationToken);
             return doctor;
         }
     }
