@@ -4,6 +4,8 @@ using Hospital.WPF.DataAccess;
 using Hospital.WPF.ViewModels.Abstract;
 using Hospital.WPF.ViewModels.Commands;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Windows;
 using System.Windows.Input;
 
@@ -39,6 +41,8 @@ public class MainVM : ObservableObject
     private List<DoctorVM> _modifiedDoctors = new List<DoctorVM>();
     private List<PatientVM> _patientsToAdd = new List<PatientVM>();
     private List<DoctorVM> _doctorsToAdd = new List<DoctorVM>();
+
+    private static HttpClient _httpClient;
     #endregion
 
     #region Команды
@@ -53,7 +57,7 @@ public class MainVM : ObservableObject
             ActiveAction = true;
             Patients.Clear();
             _modifiedPatients.Clear();
-            var patients = await DataAccessHelper.GetCall<PatientInfoDTO[]>($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}");
+            var patients = await DataAccessHelper.GetCall<PatientInfoDTO[]>(_httpClient, DataAccessConstants.PatientsUri);
             if(patients is null)
             {
                 MessageBox.Show("No patients received", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -66,8 +70,10 @@ public class MainVM : ObservableObject
                 pvm.PropertyChanged += (sender, args) =>
                 {
                     var patient = sender as PatientVM;
+                    if (_patientsToAdd.Contains(patient)) return; 
                     _modifiedPatients.Add(patient);
                     RaisePropertyChanged(nameof(PatientsAnyChanges));
+                    CommandManager.InvalidateRequerySuggested();
                 };
             }
         }
@@ -78,6 +84,7 @@ public class MainVM : ObservableObject
         finally
         {
             ActiveAction = false;
+            CommandManager.InvalidateRequerySuggested();
         }
     }
     public bool CanGetPatients(object _) => !ActiveAction;
@@ -92,17 +99,19 @@ public class MainVM : ObservableObject
         try
         {
             ActiveAction = true;
-            foreach (var p in _modifiedPatients.ToArray())
-            {
-                await DataAccessHelper.PutCall($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}", p.Data);
-                _modifiedPatients.Remove(p);
-            }
-            foreach (var p in _patientsToAdd.ToArray())
-            {
-                var updatedData = await DataAccessHelper.PostCall<PatientInfoDTO, PatientInfoDTO>($"{DataAccessConstants.BaseUri}{DataAccessConstants.PatientsUri}", p.Data);
-                p.UpdateData(updatedData);
-                _patientsToAdd.Remove(p);
-            }
+            await Parallel.ForEachAsync(_modifiedPatients.ToArray(),
+                async (patient, cancellationToken) =>
+                {
+                    await DataAccessHelper.PutCall(_httpClient, DataAccessConstants.PatientsUri, patient.Data);
+                    _modifiedPatients.Remove(patient);
+                });
+            await Parallel.ForEachAsync(_patientsToAdd.ToArray(),
+                async (patient, cancellationToken) =>
+                {
+                    var updatedData = await DataAccessHelper.PostCall<PatientInfoDTO, PatientInfoDTO>(_httpClient, DataAccessConstants.PatientsUri, patient.Data);
+                    patient.UpdateData(updatedData);
+                    _patientsToAdd.Remove(patient);
+                });
         }
         catch (Exception ex)
         {
@@ -111,6 +120,7 @@ public class MainVM : ObservableObject
         finally
         {
             ActiveAction = false;
+            CommandManager.InvalidateRequerySuggested();
         }
     }
     public bool CanSaveChangedPatients(object _) => (PatientsAnyChanges || AnyPatientsToAdd) && !ActiveAction;
@@ -124,6 +134,7 @@ public class MainVM : ObservableObject
         Patients.Add(patient);
         _patientsToAdd.Add(patient);
         RaisePropertyChanged(nameof(AnyPatientsToAdd));
+        CommandManager.InvalidateRequerySuggested();
     }
     public bool CanAddPatient(object _) => !ActiveAction;
     #endregion
@@ -137,7 +148,7 @@ public class MainVM : ObservableObject
         {
             ActiveAction = true;
             Doctors.Clear();
-            var doctors = await DataAccessHelper.GetCall<DoctorInfoDTO[]>($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}");
+            var doctors = await DataAccessHelper.GetCall<DoctorInfoDTO[]>(_httpClient, DataAccessConstants.DoctorsUri);
             if (doctors is null)
             {
                 MessageBox.Show("No doctors received", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -150,8 +161,10 @@ public class MainVM : ObservableObject
                 dvm.PropertyChanged += (sender, args) =>
                 {
                     var doctor = sender as DoctorVM;
+                    if (_doctorsToAdd.Contains(doctor)) return;
                     _modifiedDoctors.Add(doctor);
                     RaisePropertyChanged(nameof(DoctorsAnyChanges));
+                    CommandManager.InvalidateRequerySuggested();
                 };
             }
         }
@@ -162,6 +175,7 @@ public class MainVM : ObservableObject
         finally
         {
             ActiveAction = false;
+            CommandManager.InvalidateRequerySuggested();
         }
     }
     public bool CanGetDoctors(object _) => !ActiveAction;
@@ -175,17 +189,19 @@ public class MainVM : ObservableObject
         try
         {
             ActiveAction = true;
-            foreach (var d in _modifiedDoctors.ToArray())
-            {
-                await DataAccessHelper.PutCall($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}", d.Data);
-                _modifiedDoctors.Remove(d);
-            }
-            foreach (var d in _doctorsToAdd.ToArray())
-            {
-                var updatedData = await DataAccessHelper.PostCall<DoctorInfoDTO, DoctorInfoDTO>($"{DataAccessConstants.BaseUri}{DataAccessConstants.DoctorsUri}", d.Data);
-                d.UpdateData(updatedData);
-                _doctorsToAdd.Remove(d);
-            }
+            await Parallel.ForEachAsync(_modifiedDoctors.ToArray(),
+                async (doctor, cancellationToken) =>
+                {
+                    await DataAccessHelper.PutCall(_httpClient, DataAccessConstants.DoctorsUri, doctor.Data, cancellationToken);
+                    _modifiedDoctors.Remove(doctor);
+                });
+            await Parallel.ForEachAsync(_modifiedDoctors.ToArray(),
+                async (doctor, cancellationToken) =>
+                {
+                    var updatedData = await DataAccessHelper.PostCall<DoctorInfoDTO, DoctorInfoDTO>(_httpClient, DataAccessConstants.DoctorsUri, doctor.Data);
+                    doctor.UpdateData(updatedData);
+                    _doctorsToAdd.Remove(doctor);
+                });
         }
         catch(Exception ex) 
         {
@@ -194,8 +210,8 @@ public class MainVM : ObservableObject
         finally
         {
             ActiveAction = false;
+            CommandManager.InvalidateRequerySuggested();
         }
-
     }
     public bool CanSaveChangedDoctors(object _) => (DoctorsAnyChanges || AnyDoctorsToAdd) && !ActiveAction;
     #endregion
@@ -208,6 +224,7 @@ public class MainVM : ObservableObject
         Doctors.Add(doctor);
         _doctorsToAdd.Add(doctor);
         RaisePropertyChanged(nameof(AnyDoctorsToAdd));
+        CommandManager.InvalidateRequerySuggested();
     }
     public bool CanAddDoctor(object _) => !ActiveAction;
     #endregion
@@ -223,6 +240,16 @@ public class MainVM : ObservableObject
         SaveChangedDoctorsCommand = new RelayCommand(OnSaveChangedDoctors, CanSaveChangedDoctors);
         AddPatientCommand = new RelayCommand(OnAddPatient, CanAddPatient);
         AddDoctorCommand = new RelayCommand(OnAddDoctor, CanAddDoctor);
+
+        var socketsHandler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+        };
+        _httpClient = new HttpClient(socketsHandler);
+        _httpClient.BaseAddress = new Uri(DataAccessConstants.BaseUri);
+        _httpClient.Timeout = TimeSpan.FromSeconds(900);
+        _httpClient.DefaultRequestHeaders.Accept.Clear();
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
     #endregion
 }
